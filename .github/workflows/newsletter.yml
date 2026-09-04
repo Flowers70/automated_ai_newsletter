@@ -19,6 +19,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Download SpaCy model
+        run: python -m spacy download en_core_web_sm
+
       - name: Run newsletter generator
         env:
           Tavily_DEV: ${{ secrets.TAVILY_DEV }}
