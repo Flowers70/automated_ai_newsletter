@@ -1,77 +1,78 @@
-annotated-doc @ file:///C:/Users/task_OUCwDtqDQhqmA_0/croot/annotated-doc_1786359559357/work
-annotated-types @ file:///C:/Users/task_fwxi2cmZTcalb_0/croot/annotated-types_1783681193742/work
-anyio @ file:///C:/Users/task_177313442937352/croot/anyio_1773134524846/work
-blis @ file:///C:/Users/task_177522758445830/croot/cython-blis_1775227686762/work
-brotlicffi @ file:///C:/Users/task_178644367717961/croot/brotlicffi_1786443941324/work
-catalogue @ file:///C:/Users/dev-admin/buildout/croot/catalogue_1759963931251/work
-certifi @ file:///C:/Users/task_B-yggVMNRRKAU_0/croot/certifi_1785412608275/work/certifi
-cffi @ file:///C:/Users/task_178669709643931/croot/cffi_1786697234081/work
-charset-normalizer @ file:///C:/Users/task_AGRXPMi1RD6j2_0/croot/charset-normalizer_1782917500512/work
-click @ file:///C:/Users/task_178117572493381/croot/click_1781176571315/work
-cloudpathlib @ file:///C:/Users/dev-admin/buildout/croot/cloudpathlib_1768569490599/work
-cloudpickle @ file:///C:/miniconda3/conda-bld/cloudpickle_1764930560721/work
-colorama @ file:///C:/Users/dev-admin/buildout/croot/colorama_1759952627215/work
-confection @ file:///C:/Users/task_178782572945876/croot/confection_1787825888046/work
+annotated-doc==0.0.5
+annotated-types==0.7.0
+anyio==4.12.1
+blis==1.3.3
+brotlicffi==1.2.0.1
+catalogue==2.0.10
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.4.7
+click==8.4.1
+cloudpathlib==0.23.0
+cloudpickle==3.1.2
+colorama==0.4.6
+confection==1.3.3
 cryptography==50.0.1
-cymem @ file:///C:/Users/task_177868521727206/croot/cymem_1778685420982/work
+cymem==2.0.13
 distro==1.9.0
-en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85
+en_core_web_sm==3.8.0
 eval_type_backport==0.4.0
 google-auth==2.57.0
 google-genai==2.21.0
-h11 @ file:///C:/miniconda3/conda-bld/h11_1761931280691/work
-httpcore @ file:///C:/Users/dev-admin/buildout/croot/httpcore_1761939678908/work
-httpx @ file:///C:/Users/dev-admin/buildout/croot/httpx_1761941099328/work
-idna @ file:///C:/Users/task_178056150426656/croot/idna_1780561583484/work
-importlib_metadata @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_importlib-metadata_1787943971/work
-Jinja2 @ file:///C:/Users/task_178782649129451/croot/jinja2_1787826571029/work
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.18
+importlib_metadata==9.0.1
+Jinja2==3.1.6
 jsonpath-python==1.1.6
-Markdown @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_markdown_1785479173/work
-markdown-it-py @ file:///C:/Users/task_178731078259848/croot/markdown-it-py_1787310907160/work
-MarkupSafe @ file:///C:/Users/task_178239079824739/croot/markupsafe_1782390881383/work
-mdurl @ file:///C:/Users/dev-admin/buildout/croot/mdurl_1759959136798/work
+Markdown==3.10.3
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
 mistralai==2.9.4
-murmurhash @ file:///C:/miniconda3/conda-bld/murmurhash_1764711002601/work
-numpy @ file:///C:/Users/task_177618877815827/croot/numpy_and_numpy_base_1776188870218/work/dist/numpy-2.3.5-cp314-cp314-win_amd64.whl#sha256=b2c08c19b8e05e14259b0079f5afb942e1854d9bc0cce6988e8df482f5ccbe9a
+murmurhash==1.0.15
+numpy==2.3.5
 opentelemetry-api==1.44.0
 opentelemetry-semantic-conventions==0.65b0
 packaging==26.3
-preshed @ file:///C:/Users/task_bSZ029cqTa6jA_0/croot/preshed_1785915537041/work
+pip==26.2.1
+preshed==3.0.13
 pyasn1==0.6.4
 pyasn1_modules==0.4.2
-pycparser @ file:///C:/Users/task_177495971781166/croot/pycparser_1774959830167/work
-pydantic @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pydantic_1778103405/work
-pydantic_core @ file:///C:/Users/task_177867689358422/croot/pydantic-core_1778677003690/work
-Pygments @ file:///C:/Users/task_177512697712397/croot/pygments_1775127052270/work
-PySocks @ file:///C:/miniconda3/conda-bld/pysocks_1761753029698/work
+pycparser==3.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+Pygments==2.20.0
+PySocks==1.7.1
 python-dateutil==2.9.0.post0
 regex==2026.9.3
-requests @ file:///C:/Users/task_178034872438702/croot/requests_1780348788133/work
-rich @ file:///C:/Users/task_177886070702558/croot/rich_1778860815454/work
-ruamel.yaml @ file:///C:/miniconda3/conda-bld/ruamel.yaml_1762535970940/work
-ruamel.yaml.clib @ file:///C:/miniconda3/conda-bld/ruamel.yaml.clib_1762530090773/work
+requests==2.34.2
+rich==15.0.0
+ruamel.yaml==0.18.16
+ruamel.yaml.clib==0.2.14
 setuptools==83.0.0
-shellingham @ file:///C:/miniconda3/conda-bld/shellingham_1761912225149/work
+shellingham==1.5.4
 six==1.17.0
-smart_open @ file:///C:/Users/task_177003418063785/croot/smart_open_1770034288818/work
+smart_open==7.5.0
 sniffio==1.3.1
-spacy @ file:///D:/bld/spacy_1774754228116/work
-spacy-legacy @ file:///C:/Users/dev-admin/buildout/croot/spacy-legacy_1760015111646/work
-spacy-loggers @ file:///C:/Users/dev-admin/buildout/croot/spacy-loggers_1760015158769/work
-srsly @ file:///C:/Users/task_177456123809584/croot/srsly_1774562106838/work
+spacy==3.8.14
+spacy-legacy==3.0.12
+spacy-loggers==1.0.4
+srsly==2.5.3
 tavily-python==0.8.0
 tenacity==9.1.4
-thinc @ file:///C:/Users/task_177556136376741/croot/thinc_1775561496409/work
+thinc==8.3.13
 tiktoken==0.14.0
-tqdm @ file:///C:/Users/task_178696928308483/croot/tqdm_1786969371587/work
-typer @ file:///C:/Users/task_177870117389301/croot/typer_1778701947414/work
-typing-inspection @ file:///C:/Users/task_178653437244313/croot/typing-inspection_1786534515125/work
-typing_extensions @ file:///C:/Users/task_NKia6fvQRj--m_0/croot/typing_extensions_1784101066632/work
-ujson @ file:///C:/Users/task_178239944328167/croot/ujson_1782399527639/work
-urllib3 @ file:///C:/Users/task_177853593283653/croot/urllib3_1778536216915/work
-wasabi @ file:///C:/Users/dev-admin/buildout/croot/wasabi_1759989996517/work
-weasel @ file:///C:/Users/task_178643966400323/croot/weasel_1786440232987/work
+tqdm==4.70.0
+typer==0.25.1
+typing_extensions==4.16.0
+typing-inspection==0.4.3
+ujson==5.13.0
+urllib3==2.7.0
+wasabi==1.1.3
+weasel==1.0.0
 websockets==16.1.1
-win_inet_pton @ file:///C:/miniconda3/conda-bld/win_inet_pton_1761746275387/work
-wrapt @ file:///C:/Users/task_178065186993536/croot/wrapt_1780652817595/work
-zipp @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_zipp_1779159948/work
+win_inet_pton==1.1.0
+wrapt==2.2.1
+zipp==4.1.0
