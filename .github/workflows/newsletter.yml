@@ -1,5 +1,9 @@
 name: Daily Newsletter
 
+concurrency:
+  group: daily-newsletter
+  cancel-in-progress: true
+
 on:
   schedule:
     - cron: "30 3 * * *" # Time scheduled to run
