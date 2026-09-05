@@ -21,6 +21,7 @@ jobs:
           python-version: "3.10"
 
       # Requirements has cached... please un-cache :)
+      # LOL its always the small mistakes
       - name: Install dependencies
         run: pip install -r requirements.txt
 
