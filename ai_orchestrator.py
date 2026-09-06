@@ -181,7 +181,7 @@ class AIOrchestrator:
             # If the model returned a single category
             if isinstance(data, dict) and "category" in data:
                 return [data["category"]]
-        except Exception
+        except Exception:
             pass
 
         text = raw_results.lower()
