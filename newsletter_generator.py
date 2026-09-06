@@ -8,11 +8,13 @@ import markdown
 from openrouter import OpenRouter
 import requests
 import time
+from datetime import date, timedelta
 
-import smtplib # For email
-from email.message import EmailMessage
-
-import spacy # For NLP (Natural Language Processing)
+# Personal imports
+from email_handler import send_email
+from article_vetter import vet_articles
+from data_cleaner import get_human_legible_txt
+from vibe_checker import get_gossip_sentiment
 
 tavily_key = os.getenv("Tavily_DEV")
 tavily_client = TavilyClient(api_key=tavily_key)
@@ -24,276 +26,203 @@ mistral_key = os.getenv("MISTRAL_AI_KEY")
 mistral_client = Mistral(mistral_key)
 
 # Initial search
-with open('five_potential_sources.json', 'r', encoding='utf-8') as file:
-    response = json.load(file)
-# response = tavily_client.search("OpenAI OR Anthropic OR Google DeepMind OR Meta AI OR Mistral OR xAI OR AI OR Artificial Intelligence", topic="news", time_range="day", max_results="5")
+# with open('five_potential_sources.json', 'r', encoding='utf-8') as file:
+#     response = json.load(file)
 
-# def viewResponse(title, url, content, score, published_date, formatter=""):
-#     print(formatter + "Title\n" + formatter + title + "\n")
-#     print(formatter + "url: " + url + "\n")
-#     print(formatter + "Content\n" + formatter + content + "\n")
-#     print(formatter + "Relevance: " + score + "\n")
-#     print(formatter + "Published: " + published_date + "\n")
-#     print(formatter + "---------------------------------------")
+response = tavily_client.search("OpenAI OR Anthropic OR Google DeepMind OR Meta AI OR Mistral OR xAI OR AI OR Artificial Intelligence", topic="news", time_range="day", max_results="5")
 
+def viewResponse(title, url, content, score, published_date, formatter=""):
+    print(formatter + "Title\n" + formatter + title + "\n")
+    print(formatter + "url: " + url + "\n")
+    print(formatter + "Content\n" + formatter + content + "\n")
+    print(formatter + "Relevance: " + score + "\n")
+    print(formatter + "Published: " + published_date + "\n")
+    print(formatter + "---------------------------------------")
 
-# for potential_source in response["results"]:
-#     viewResponse(potential_source["title"], potential_source["url"], potential_source["content"], str(potential_source["score"]), str(potential_source["published_date"]))
+# # Vet Article Sources to obtain corroborate and consequential sources for the newsletter.
+open_router_model = "nvidia/nemotron-3-super-120b-a12b:free"
+temp_email_results = vet_articles(response, open_router_model, tavily_client)
 
-
-# # Determine if it is just a SEO junk like "Top Multimodal AI Companies in 2026 Google OpenAI"
-# # For this to perform well as expected in the coding challenge debrief it will need to implement
-# # a LLM.
-
-# class CategoryList(BaseModel):
-#     items: list[str]
-
-# article_titles = [d["title"] for d in response["results"]]
-# prompt = """
-#         Classify these articles into one of three categories. 
-#         News - reporting a specific event, discovery, release, or factual claim. 
-#         Analysis - offering insight, perspective, or interpretation about AI trends.
-#         Noise - generic SEO filler, listicles, hype, or non‑consequential content.
-#         Respond with a csv list containing one word for each article: news, analysis, or noise.
-
-#         Title: """+str(article_titles)
-
-# # quality_analysis = mistral_client.chat.parse(
-# #     model="mistral-small-latest",
-# #     messages=[
-# #         {
-# #             "role": "user",
-# #             "content": prompt
-# #         }
-# #     ],
-# #     response_format=CategoryList,
-# #     temperature=0
-# # )
-
-# # nvidia/nemotron-3-super-120b-a12b:free
-# # google/gemma-4-31b-it:free
-# open_router_model = "nvidia/nemotron-3-super-120b-a12b:free"
-
-# with OpenRouter(
-#     api_key = os.getenv("OPENROUTER")
-# ) as open_router:
-#     quality_analysis = open_router.chat.send(
-#         model=open_router_model,
-#         messages = [
-#             {
-#                 "content": prompt,
-#                 "role": "user"
-#             }
-#         ],
-#         response_format={
-#             "type":"json_schema",
-#             "json_schema": {
-#                 "name": "quality_json",
-#                 "strict": True,
-#                 "schema": {
-#                     "type":"object",
-#                     "properties": {
-#                         "categories": {
-#                             "type": "array",
-#                             "items": {"type": "string"}
-#                         }
-#                     },
-#                     "required": ["categories"]
-#                 }
-#             }
-#         },
-#         stream=False
-#     )
-
-# print(quality_analysis.choices[0].message.content)
-
-# # quality_results = response["quality_results"]
-# quality_results = quality_analysis.choices[0].message.content
-# quality_results = json.loads(quality_results)
-
-# quality_results = quality_results["categories"]
-
-# print("Looking at:", quality_results, type(quality_results))
-
-# # # Identify 3 corroborate articles to ensure this isn't a one off source
-# temp_email_results = []
-# for pageI in range(0, len(response["results"])):
-#     if(quality_results[pageI] != "noise"):
-
-#         first_sentence = response["results"][pageI]["content"].split(".")[0]
-#         search_query = response["results"][pageI]["title"] + " " + first_sentence
-
-#         corroborate_search_results = tavily_client.search(search_query, topic="news")
-#         # print("Articles #:", len(corroborate_search_results["results"]))
-
-#         corroborate_evidence = 0
-#         for subPage in corroborate_search_results["results"]:
-#             if subPage["score"] >= 0.5 and subPage["url"] != response["results"][pageI]["url"]:
-#                 corroborate_evidence += 1
-
-#         if corroborate_evidence >= 3:
-#             # The article is co"rroborate and should be included in the newsletter. 
-#             print(response["results"][pageI]["title"], "|", response["results"][pageI]["url"])
-#             print("Corroborated")
-#             print()
-#             temp_email_results.append(response["results"][pageI]) 
-
-#     if(len(temp_email_results) >= 3):
-#         print("Length of 3 met.")
-#         break
+vetted_article_titles = [d["title"] for d in temp_email_results]
+vetted_article_urls = [d["url"] for d in temp_email_results]
         
-# print("*************************************************************************************************")
-# print("VALIDATED RESULTS:")
-# signal_sources_txt = []
-# # temp_email_results = response["corroborated_consequential_sources"]
-# for validResult in temp_email_results:
-#     viewResponse(validResult["title"], validResult["url"], validResult["content"], str(validResult["score"]), str(validResult["published_date"]))
-#     extract_text = tavily_client.extract(validResult["url"])
-#     signal_sources_txt.append(extract_text)
+print("*************************************************************************************************")
+print("VALIDATED RESULTS:")
+signal_sources_txt = []
+# temp_email_results = response["corroborated_consequential_sources"]
+for validResult in temp_email_results:
+    viewResponse(validResult["title"], validResult["url"], validResult["content"], str(validResult["score"]), str(validResult["published_date"]))
+    extract_text = tavily_client.extract(validResult["url"])
+    signal_sources_txt.append(extract_text)
 
-# # # print("TEXT:")
-# # # # Perform NLP to extract human readible text scraped from the signal source.
-# # # for signal_source in signal_sources_txt:
-# # #     print(signal_source)
-# # #     print()
-
-# nlp = spacy.blank("en")
-# nlp.add_pipe("sentencizer")
-
-# # Time to clean extracted data to something a human can read.
-# # Step 1 - VERBS AND NOUNS
-# nlp = spacy.load("en_core_web_sm")
-
-# def has_verb_and_noun(sent):
-#     doc = nlp(sent)
-#     has_verb = any(t.pos_ == "VERB" for t in doc)
-#     has_noun = any(t.pos_ in ("NOUN", "PROPN") for t in doc)
-#     return has_verb and has_noun
-
-# def has_lowercase_word(sent):
-#     return any(word.islower() for word in sent.split())
-
-# # Step 2 - PUNCTUATION
-# import string
-
-# def has_punctuation(sent):
-#     return any(char in string.punctuation for char in sent)
-
-# # Step 3 - LENGTH
-# def long_enough(sent):
-#     return len(sent.split()) > 6
-
-# # Step 4 - NOT SYMBOL DENSE
-# def not_symbol_heavy(sent):
-#     symbols = sum(not c.isalnum() and not c.isspace() for c in sent)
-#     return symbols / max(len(sent), 1) < 0.3
-
-# # Calculate Sentence Score
-# def is_human_readable(sent):
-#     return(
-#         has_verb_and_noun(sent)
-#         and has_lowercase_word(sent)
-#         and long_enough(sent)
-#         and not_symbol_heavy(sent)
-#         and has_punctuation(sent)
-#     )
-
-# human_readable_source_txt = []
-# for source in signal_sources_txt:
-#     # doc = nlp(signal_sources_txt[0]["results"][0]["raw_content"])
-#     candidate_sentences = [sent.strip() for sent in source["results"][0]["raw_content"].split("\n") if sent.strip()]
-
-#     # Filter
-#     human_sentences = [s for s in candidate_sentences if is_human_readable(s)]
-#     human_text = "\n".join(human_sentences)
-#     human_readable_source_txt.append(human_text)
+# Data cleaning
+human_readable_source_txt = get_human_legible_txt(signal_sources_txt)
 
 # Summarize each source
-# source_summaries = []
-source_summaries = response["source_summaries2"]
-# for source in human_readable_source_txt:
-#     prompt = """Summarize the following source in 120–150 words.""" + source
+source_summaries = []
+# source_summaries = response["source_summaries2"]
+for source in human_readable_source_txt:
+    prompt = """Summarize the following source in 120–150 words.""" + source
 
-#     # summary = mistral_client.chat.complete(
-#     #     model="mistral-small-latest",
-#     #     messages=[
-#     #         {
-#     #             "role": "user",
-#     #             "content": prompt
-#     #         }
-#     #     ]
-#     # )
+    # summary = mistral_client.chat.complete(
+    #     model="mistral-small-latest",
+    #     messages=[
+    #         {
+    #             "role": "user",
+    #             "content": prompt
+    #         }
+    #     ]
+    # )
 
-#     with OpenRouter(
-#         api_key = os.getenv("OPENROUTER")
-#     ) as open_router:
-#         summary = open_router.chat.send(
-#             model=open_router_model,
-#             messages = [
-#                 {
-#                     "content": prompt,
-#                     "role": "user"
-#                 }
-#             ],
-#             stream=False
-#         )
+    with OpenRouter(
+        api_key = os.getenv("OPENROUTER")
+    ) as open_router:
+        summary = open_router.chat.send(
+            model=open_router_model,
+            messages = [
+                {
+                    "content": prompt,
+                    "role": "user"
+                }
+            ],
+            stream=False
+        )
 
-#     summary_result = summary.choices[0].message.content
-#     formatted_output = markdown.markdown(summary_result)
-#     print(formatted_output)
-#     source_summaries.append(formatted_output)
-#     print()
+    summary_result = summary.choices[0].message.content
+    print(formatted_output)
+    source_summaries.append(formatted_output)
+    print()
 
 # --------------------------------------------------------------------------------------------------
-# # RETRIEVE GOSSIP - X and Reddit
+# RETRIEVE GOSSIP - X and Reddit
 # REDDIT: https://www.reddit.com/r/opencodeCLI/comments/1w4jwih/anthropic_just_released_claude_fable_51_and
 # X: https://x.com/ArtificialAnlys/status/2094881171066978525
-# reddit_gossip = tavily_client.search("site:reddit.com Claude Fable 5.1 (max with fallback)", max_results="3")
-# x_gossip = tavily_client.search("site:x.com Claude Fable 5.1 (max with fallback)", max_results="3")
 
-# print("Reddit:")
-# print(reddit_gossip["results"])
-# print()
-# print("---")
-# print()
-# print("X:")
-# print(x_gossip["results"])
-
-# # Web scraping
-# unfiltered_gossip = tavily_client.extract(reddit_gossip["results"][0]["url"])
+unfiltered_gossip = get_gossip_sentiment(vetted_article_titles, open_router_model, tavily_client)
 
 # NOTE On Reddit - There is no way to anonymously scrape Reddit in Python
 # Instead create a JavaScript/Typescript part that uses Devvit to get the info needed.
 # You've got this you are so close! Keep going :)
 
 # --------------------------------------------------------------------------------------------------
-# SEND EMAIL
+# GitHub Repo of the Day
+# GET https://github.com:>2026-08-01&sort=stars&order=desc
+# https://api.github.com/search/repositories?q=created:>2026-08-01&sort=stars&order=desc
 
-message = "\n".join(source_summaries)
+days_ago = 7
+target_date = date.today() - timedelta(days=days_ago)
+search_date = str(target_date.isoformat())
+github_query = "https://api.github.com/search/repositories?q=created:>"+search_date+"&sort=stars&order=desc&topic=ai"
+top_repo = requests.get(github_query)
+
+print("GitHub Search")
+
+repo = top_repo.json()["items"][0]
+
+github_repo_of_the_day = {
+    "name": repo.get("name"),
+    "url": repo.get("html_url"),
+    "description": repo.get("description"),
+    "homepage": repo.get("homepage"),
+    "stars": repo.get("stargazers_count"),
+    "language": repo.get("language")
+}
+
+print(github_repo_of_the_day)
+
+# --------------------------------------------------------------------------------------------------
+# Newsletter Generation!!!
+# Combine all the info to create the newsletter.
+# Prompt = Article Summaries + Gossip Sentiments + GitHub Repo of the Day
+
+news_info = ""
+for i in range(0, len(vetted_article_titles)):
+    news_info += "Article Title: " + vetted_article_titles[i] + "\n"
+    news_info += "Article URL: " + vetted_article_urls[i] + "\n"
+    news_info += "Article Info:\n"
+    news_info += source_summaries[i] + "\n\n"
+
+
+ultimate_prompt = "Create a markdown formatted newsletter with a reading time of about four minutes. " 
+ultimate_prompt += "The audience of this newsletter are smart, curious, non-technical business owners. " 
+ultimate_prompt += "The newsletter should contain the following sections with relevant information:\n\n " 
+
+ultimate_prompt += "The Big Story\n"
+ultimate_prompt += "The one thing that matters most today, and why.\n\n"
+
+ultimate_prompt += "Frontier Watch\n" 
+ultimate_prompt += "A sentence on how what each source is about and how it relates to at least two of the following: "
+ultimate_prompt += "time saved, costs reduced, or revenue unlocked. Be specific when talking about what parts specifically "  
+ultimate_prompt += "relate to the time saved, costs reduced, or revenue unlocked. Include hyperlinks to the relevant article "  
+ultimate_prompt += "the content was sourced from. Include any other relevant information from these sources you deem worth "
+ultimate_prompt += "knowing.\n"
+ultimate_prompt += "Sources:\n"
+ultimate_prompt += news_info
+
+ultimate_prompt += "The Street Says\n"
+ultimate_prompt += "Sentiment, gossip, and hot takes from X and Reddit.\n"
+ultimate_prompt += "X:\n"
+ultimate_prompt += unfiltered_gossip["x"]["gossip_sentiment"] + "\n"
+ultimate_prompt += "Reddit:\n"
+ultimate_prompt += unfiltered_gossip["reddit"]["gossip_sentiment"] + "\n\n"
+
+ultimate_prompt += "Repo of the Day\n"
+ultimate_prompt += "Information on one GitHub project worth knowing about. Use the following information provided for the "
+ultimate_prompt += "GitHub repo of the day.\n"
+ultimate_prompt += str(github_repo_of_the_day) + "\n\n"
+
+ultimate_prompt += "Two Steps Ahead\n"
+ultimate_prompt += "A short forward-looking take: what today's news hints at for tomorrow."
+
+print("##############################################################################################")
+print(ultimate_prompt)
+print("##############################################################################################")
+print()
+
+nvidia_endpoint = "https://integrate.api.nvidia.com/v1/chat/completions"
+
+NVIDIA_API_KEY = os.getenv("NVIDIA_DEV")
+
+headers = {
+    "Authorization": f"Bearer {NVIDIA_API_KEY}",
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "messages": [
+        {
+            "role": "user",
+            "content": ultimate_prompt
+        }
+    ]
+}
+
+response = requests.post(
+    nvidia_endpoint,
+    headers=headers,
+    json=payload,
+)
+
+print(response)
+data = response.json()
+print("DATA:", data)
+newsletter_message = data["choices"][0]["message"]["content"]
+
+# newsletter_message = google_client.interactions.create(
+#     model="gemini-3.8-flash",
+#     input=ultimate_prompt
+# )
+
+# newsletter_message = newsletter_message.output_text
+
+message = markdown.markdown(newsletter_message)
+
+# --------------------------------------------------------------------------------------------------
+# SEND EMAIL
 
 print("****************************************************************************")
 print("SENDING")
 print(message)
 
-EMAIL_ADDRESS = os.environ.get("EMAIL_USER")
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASS")
-EMAIL_RECIPIENTS = os.environ.get("EMAIL_RECIPIENTS")
-
-print("EMAIL_RECIPIENTS:", EMAIL_RECIPIENTS)
-
-recipients = [email.strip() for email in EMAIL_RECIPIENTS.split(",") if email.strip()]
-
-print("RECIPIENTS:", recipients)
-
-msg = EmailMessage()
-msg["Subject"] = "AI Newsletter"
-msg["From"] = EMAIL_ADDRESS
-msg["To"] = ", ".join(recipients)
-
-msg.set_content(message)
-
-msg.add_alternative(message, subtype="html")
-
-with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-    smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-    smtp.send_message(msg)
+send_email(message)
