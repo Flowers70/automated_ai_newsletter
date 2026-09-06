@@ -1,7 +1,4 @@
-import os
-from openrouter import OpenRouter
-
-def get_gossip_sentiment(vetted_article_titles, open_router_model, tavily_client):
+def get_gossip_sentiment(vetted_article_titles, tavily_client, ai):
     unfiltered_gossip = {
         "reddit": {
             "title": [],
@@ -31,22 +28,7 @@ def get_gossip_sentiment(vetted_article_titles, open_router_model, tavily_client
 
     for key in unfiltered_gossip:
         prompt = """In a single short paragraph convey the overall sentiment of this gossip: """ + " ".join(unfiltered_gossip[key]["content"])
-
-        with OpenRouter(
-            api_key = os.getenv("OPENROUTER")
-        ) as open_router:
-            summary = open_router.chat.send(
-                model=open_router_model,
-                messages = [
-                    {
-                        "content": prompt,
-                        "role": "user"
-                    }
-                ],
-                stream=False
-            )
-
-        unfiltered_gossip[key]["gossip_sentiment"] = summary.choices[0].message.content 
+        unfiltered_gossip[key]["gossip_sentiment"] = ai.generate(prompt, "open_router")
 
     print("SENTIMENT")
     for key in unfiltered_gossip:

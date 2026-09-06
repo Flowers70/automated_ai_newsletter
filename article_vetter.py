@@ -1,8 +1,6 @@
-import os
-import json
-from openrouter import OpenRouter
+# import json
 
-def vet_articles(response, open_router_model, tavily_client):
+def vet_articles(response, tavily_client, ai):
     # Determine if it is just a SEO junk like "Top Multimodal AI Companies in 2026 Google OpenAI"
     # For this to perform well as expected in the coding challenge debrief it will need to implement
     # a LLM.
@@ -18,59 +16,10 @@ def vet_articles(response, open_router_model, tavily_client):
 
             Title: """+str(article_titles)
 
-    # quality_analysis = mistral_client.chat.parse(
-    #     model="mistral-small-latest",
-    #     messages=[
-    #         {
-    #             "role": "user",
-    #             "content": prompt
-    #         }
-    #     ],
-    #     response_format=CategoryList,
-    #     temperature=0
-    # )
+    quality_results = ai.generate(prompt, "open_router", "classification", True)
+    # quality_results = json.loads(quality_results)
 
-    # nvidia/nemotron-3-super-120b-a12b:free
-    # google/gemma-4-31b-it:free
-
-    with OpenRouter(
-        api_key = os.getenv("OPENROUTER")
-    ) as open_router:
-        quality_analysis = open_router.chat.send(
-            model=open_router_model,
-            messages = [
-                {
-                    "content": prompt,
-                    "role": "user"
-                }
-            ],
-            response_format={
-                "type":"json_schema",
-                "json_schema": {
-                    "name": "quality_json",
-                    "strict": True,
-                    "schema": {
-                        "type":"object",
-                        "properties": {
-                            "categories": {
-                                "type": "array",
-                                "items": {"type": "string"}
-                            }
-                        },
-                        "required": ["categories"]
-                    }
-                }
-            },
-            stream=False
-        )
-
-    print(quality_analysis.choices[0].message.content)
-
-    # quality_results = response["quality_results"]
-    quality_results = quality_analysis.choices[0].message.content
-    quality_results = json.loads(quality_results)
-
-    quality_results = quality_results["categories"]
+    # quality_results = quality_results["categories"]
 
     print("Looking at:", quality_results, type(quality_results))
 
