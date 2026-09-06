@@ -36,4 +36,6 @@ jobs:
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
+          OPENROUTER: ${{ secrets.OPENROUTER }}
+          NVIDIA_DEV: ${{ secrets.NVIDIA_DEV }}
         run: python newsletter_generator.py
