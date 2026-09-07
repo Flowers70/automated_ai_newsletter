@@ -81,35 +81,44 @@ search_date = str(target_date.isoformat())
 github_query = "https://api.github.com/search/repositories?q=created:>"+search_date+"&sort=stars&order=desc&topic=ai"
 top_repo = requests.get(github_query)
 
+print("Top Repo")
+print(top_repo)
+print("---")
+
 try:
     github_history = storage.download_json("newsletter-archive", "repo-history/github_repo_history.json")
 except Exception as e:
     print("Supabase json download failed:", e)
     pass
 
-repo = top_repo.json()["items"][0]
-counter = 1
-while(repo.get("html_url") in github_history["urls"] and counter <= 10):
-    repo = top_repo.json()["items"][counter]
-    counter += 1
-
-github_history["urls"].pop(0)
-github_history["urls"].append(repo.get("html_url"))
-
 try:
-    storage.upload_json("newsletter-archive", "repo-history/github_repo_history.json", github_history)
-except Exception as e:
-    print("Supabase json upload failed:", e)
-    pass
+    repo = top_repo.json()["items"][0]
+    counter = 1
+    while(repo.get("html_url") in github_history["urls"] and counter <= 10):
+        repo = top_repo.json()["items"][counter]
+        counter += 1
 
-github_repo_of_the_day = {
-    "name": repo.get("name"),
-    "url": repo.get("html_url"),
-    "description": repo.get("description"),
-    "homepage": repo.get("homepage"),
-    "stars": repo.get("stargazers_count"),
-    "language": repo.get("language")
-}
+    github_history["urls"].pop(0)
+    github_history["urls"].append(repo.get("html_url"))
+
+    try:
+        storage.upload_json("newsletter-archive", "repo-history/github_repo_history.json", github_history)
+    except Exception as e:
+        print("Supabase json upload failed:", e)
+        pass
+
+    github_repo_of_the_day = {
+        "name": repo.get("name"),
+        "url": repo.get("html_url"),
+        "description": repo.get("description"),
+        "homepage": repo.get("homepage"),
+        "stars": repo.get("stargazers_count"),
+        "language": repo.get("language")
+    }
+except Exception as e:
+    print("GitHub repo retrieval failed:", e)
+    github_repo_of_the_day = "No GitHub repo of the day today."
+    pass
 
 print("*************************************************************************************************")
 print("GitHub Repo Results:")
@@ -168,7 +177,7 @@ newsletter_message = ai.generate(ultimate_prompt, "nvidia", "advanced")
 
 message = markdown.markdown(newsletter_message)
 
-archival_file_name = str(date.today().isoformat()) + ".html"
+archival_file_name = "editions/" + str(date.today().isoformat()) + ".html"
 
 try:
     storage.upload_html("newsletter-archive", archival_file_name, message)
