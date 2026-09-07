@@ -107,7 +107,7 @@ This stage obtains the raw data needed structured in a dictionary for the "Repo 
 
 Output: A dictionary containing metadata on a meaningful AI-related GitHub repository.
 
-### 6. Newsletter | Transform
+### 6. Newsletter | Synthesis
 
 Combines all the processed inputs into a single editorial markdown formatted newsletter.
 A structured prompt generates the newsletter's five sections:
@@ -133,3 +133,19 @@ This is automatically triggered by the automated workflow.
 Output: A daily edition delivered by email.
 
 ## Design Decisions
+
+### Pipeline Structure
+Intake > Transform > Synthesis > Output
+
+Rather than extract all the necessary information and then transform and synthesize the information into an output I chose to process the intake and transformation of each data source sequentially before synthesizing the final results to 
+
+### Data Quality & Filtering
+
+### AI-Driven Synthesis
+
+### Automation & Scheduling
+
+### Storage & Persistence
+
+### Resilience & Error Handling
+

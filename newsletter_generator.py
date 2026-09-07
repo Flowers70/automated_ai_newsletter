@@ -172,7 +172,7 @@ GitHub repo of the day.
 Two Steps Ahead
 A short forward-looking take: what today's news hints at for tomorrow."""
 
-newsletter_message = ai.generate(ultimate_prompt, "nvidia", "advanced")
+newsletter_message = ai.generate(ultimate_prompt, "nvidia", "advanced", timeout=300)
 
 message = markdown.markdown(newsletter_message)
 
