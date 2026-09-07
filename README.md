@@ -1,10 +1,10 @@
-# Automated Ai Newsletter
+# Automated AI Newsletter
 
 ## Setup
 
 **Clone the Repo**
 In your Command Prompt or Terminal navigate to the directory you want to clone the repository code into.\
-Enter the following:\
+Enter the following:
 1. `git clone https://github.com/Flowers70/automated_ai_newsletter.git`
 2. `cd automated_ai_newsletter`
 3. `pip install -r requirements.txt`
