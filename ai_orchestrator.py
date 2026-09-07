@@ -16,10 +16,10 @@ class GoogleAdapter:
             "advanced": "gemini-3.8-flash"
         }
 
-    def run(self, prompt, model="default", structured=False):
+    def run(self, prompt, model="default", structured=False, timeout=120):
         response = self.client.interactions.create(
             model=self.models[model],
-            input=prompt
+            input=prompt,
         )
 
         return response.output_text
@@ -164,9 +164,13 @@ class AIOrchestrator:
                 try:
                     return self.providers[fallback].run(prompt, active_model, structured)
                 except Exception:
+                    print("Unvailable provider:", fallback, "model:", active_model)
                     continue
 
+        print("All providers and models failed.")
         raise Exception("All providers failed.")
+
+        return "No content."
 
     def generate(self, prompt, provider=None, model="default", structured=False):
         raw_results = self._retry(prompt, provider, model, structured)
