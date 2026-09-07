@@ -25,14 +25,14 @@ Create an .env file in the root of the project and create and/or enter the corre
 **WARNING:** Ensure that you keep these secret and don't upload them to your GitHub repo (use .gitignore). 🤫
 
 **Running Locally**
-In your Command Prompt or Terminal ensure you are in the main directory of the automated_ai_newsletter.\
+In your Command Prompt or Terminal ensure you are in the main directory of the automated_ai_newsletter.
 
-Enter `python newsletter_generator.py`\
+Enter `python newsletter_generator.py`
 
 This will generate a newsletter, email it to the recipients stored in the EMAIL_RECIPIENTS variable, and archive the edition in the 'newsletter_archive' folder.
 
 **Running Automatically (GitHub Actions)**
-The GitHub workflow file is stored in the '.github/worflows' folder in the main directory of this project and is titled 'newsletter.yml'. Within this yaml file is the cron schedule:\
+The GitHub workflow file is stored in the '.github/worflows' folder in the main directory of this project and is titled 'newsletter.yml'. Within this yaml file is the cron schedule:
 
 ```
 schedule:
@@ -47,9 +47,15 @@ To add the secrets to your GitHub repository follow these [instructions](https:/
 This project follows a linear pipeline architecture, designed to run end-to-end every morning without human intervention. Each stage collects, transforms, and enriches data:
 
 1. AI News | Intake
+Retrieves a list of search results concerning AI from the past day. It specifically obtains the following:
+- Title
+- url
+- Content (summary of page contents)
+- Relevance
+- Publication Date
 
 2. AI News | Transform
-
+Classifies articles based on the title into "news", "analysis", or "noise". The ones classified as "noise" are discarded and considered inconsequential.
 3. Gossip | Intake
 
 4. Gossip | Transform

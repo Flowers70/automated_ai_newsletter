@@ -15,8 +15,8 @@ from search_orchestrator import SearchOrchestrator
 from supabase_storage import SupabaseStorage
 
 # Load Secrets
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 search = SearchOrchestrator()
 ai = AIOrchestrator()
