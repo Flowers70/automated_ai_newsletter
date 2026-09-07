@@ -46,6 +46,8 @@ To add the secrets to your GitHub repository follow these [instructions](https:/
 ## Architecture
 This project follows a linear pipeline architecture, designed to run end-to-end every morning without human intervention. Each stage collects, transforms, and enriches data:
 
+![Architecture Diagram](architecture_diagram.png)
+
 ### 1. AI News | Intake
 
 Retrieves daily AI related articles using a search provider.\
