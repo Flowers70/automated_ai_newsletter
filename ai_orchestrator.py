@@ -16,10 +16,11 @@ class GoogleAdapter:
             "advanced": "gemini-3.8-flash"
         }
 
-    def run(self, prompt, model="default", structured=False, timeout=120):
+    def run(self, prompt, model="default", structured=False, timeout=90):
         response = self.client.interactions.create(
             model=self.models[model],
             input=prompt,
+            timeout=timeout
         )
 
         return response.output_text
@@ -33,13 +34,14 @@ class MistralAdapter:
             "advanced": "mistral-large-2512"
         } 
 
-    def run(self, prompt, model="default", structured=False):
+    def run(self, prompt, model="default", structured=False, timeout=90):
         response = self.client.chat.complete(
             model=self.models[model],
             messages={
                 "role": "user",
                 "content": prompt
-            }
+            },
+            timeout=timeout
         )
 
         return response.choices[0].message.content
@@ -53,7 +55,7 @@ class OpenRouterAdapter:
             "advanced": "nvidia/nemotron-3-ultra-550b-a55b:free"
         }
 
-    def run(self, prompt, model="default", structured=False):
+    def run(self, prompt, model="default", structured=False, timeout=90):
         if not structured:
             response = self.client.chat.send(
                 model=self.models[model],
@@ -63,7 +65,8 @@ class OpenRouterAdapter:
                         "role": "user"
                     }
                 ],
-                stream=False
+                stream=False,
+                timeout=timeout
             )
         else:
             response = self.client.chat.send(
@@ -91,7 +94,8 @@ class OpenRouterAdapter:
                         }
                     }
                 },
-                stream=False
+                stream=False,
+                timeout=timeout
             )
 
         return response.choices[0].message.content
@@ -105,7 +109,7 @@ class NvidiaAdapter:
             "advanced": "nvidia/nemotron-3-ultra-550b-a55b"
         }
 
-    def run(self, prompt, model="default", structured=False):
+    def run(self, prompt, model="default", structured=False, timeout=90):
         nvidia_endpoint = "https://integrate.api.nvidia.com/v1/chat/completions"
 
         headers = {
@@ -120,7 +124,8 @@ class NvidiaAdapter:
                     "role": "user",
                     "content": prompt
                 }
-            ]
+            ],
+            "timeout": timeout
         }
 
         response = requests.post(
@@ -144,9 +149,9 @@ class AIOrchestrator:
         self.fallback_order = ["nvidia", "mistral", "open_router", "google"]
         self.model_order = ["default", "advanced", "classification"]
 
-    def _retry(self, prompt, provider, model, structured):
+    def _retry(self, prompt, provider, model, structured, timeout):
         try:
-            return self.providers[provider].run(prompt, model, structured)
+            return self.providers[provider].run(prompt, model, structured, timeout)
         except Exception as e:
             print("Initial requested provider unavailable:", provider)
             pass
@@ -162,7 +167,7 @@ class AIOrchestrator:
                 if fallback == provider and active_model == model:
                     continue
                 try:
-                    return self.providers[fallback].run(prompt, active_model, structured)
+                    return self.providers[fallback].run(prompt, active_model, structured, timeout)
                 except Exception:
                     print("Unvailable provider:", fallback, "model:", active_model)
                     continue
@@ -172,8 +177,8 @@ class AIOrchestrator:
 
         return "No content."
 
-    def generate(self, prompt, provider=None, model="default", structured=False):
-        raw_results = self._retry(prompt, provider, model, structured)
+    def generate(self, prompt, provider=None, model="default", structured=False, timeout=90):
+        raw_results = self._retry(prompt, provider, model, structured, timeout)
         print("Generated Output")
         print(raw_results)
         print("-------------------------------")
