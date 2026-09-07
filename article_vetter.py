@@ -17,14 +17,10 @@ def vet_articles(response, tavily_client, ai):
             Title: """+str(article_titles)
 
     quality_results = ai.generate(prompt, "open_router", "classification", True)
-    # quality_results = json.loads(quality_results)
 
-    # quality_results = quality_results["categories"]
-
-    print("Looking at:", quality_results, type(quality_results))
-
-    # Identify 3 corroborate articles to ensure this isn't a one off source
-    temp_email_results = []
+    # Only return a max of three results to ensure the newsletter can comfortably perform well
+    # in talking about the signal while staying within the 5 minute reading mark.
+    vetted_articles = []
     for pageI in range(0, len(response["results"])):
         if(quality_results[pageI] != "noise"):
 
@@ -32,22 +28,18 @@ def vet_articles(response, tavily_client, ai):
             search_query = response["results"][pageI]["title"] + " " + first_sentence
 
             corroborate_search_results = tavily_client.search(search_query, topic="news")
-            # print("Articles #:", len(corroborate_search_results["results"]))
 
             corroborate_evidence = 0
             for subPage in corroborate_search_results["results"]:
                 if subPage["score"] >= 0.5 and subPage["url"] != response["results"][pageI]["url"]:
                     corroborate_evidence += 1
 
+            # Identify 3 corroborate articles to ensure this isn't a one off source
             if corroborate_evidence >= 3:
-                # The article is co"rroborate and should be included in the newsletter. 
-                print(response["results"][pageI]["title"], "|", response["results"][pageI]["url"])
-                print("Corroborated")
-                print()
-                temp_email_results.append(response["results"][pageI]) 
+                vetted_articles.append(response["results"][pageI]) 
 
-        if(len(temp_email_results) >= 3):
+        if(len(vetted_articles) >= 3):
             print("Length of 3 met.")
             break
 
-    return temp_email_results
+    return vetted_articles
