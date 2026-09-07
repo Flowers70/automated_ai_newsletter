@@ -38,4 +38,6 @@ jobs:
           EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
           OPENROUTER: ${{ secrets.OPENROUTER }}
           NVIDIA_DEV: ${{ secrets.NVIDIA_DEV }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PRIVATE_KEY: ${{ secrets.SUPABASE_PRIVATE_KEY }}
         run: python newsletter_generator.py
