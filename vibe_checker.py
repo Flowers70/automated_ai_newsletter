@@ -26,14 +26,20 @@ def get_gossip_sentiment(vetted_article_titles, tavily_client, ai):
         unfiltered_gossip["x"]["content"].append(x_gossip["results"][0]["content"])
         unfiltered_gossip["x"]["url"].append(x_gossip["results"][0]["url"])
 
-    for key in unfiltered_gossip:
-        prompt = """In a single short paragraph convey the overall sentiment of this gossip: """ + " ".join(unfiltered_gossip[key]["content"])
-        unfiltered_gossip[key]["gossip_sentiment"] = ai.generate(prompt, "open_router")
-
-    print("SENTIMENT")
-    for key in unfiltered_gossip:
-        print(key)
-        print(unfiltered_gossip[key]["gossip_sentiment"])
-        print()
+    if len(unfiltered_gossip["reddit"]["title"]) > 0 and len(unfiltered_gossip["x"]["title"]) > 0:
+        for key in unfiltered_gossip:
+            prompt = """In a single short paragraph convey the overall sentiment of this gossip: """ + " ".join(unfiltered_gossip[key]["content"])
+            unfiltered_gossip[key]["gossip_sentiment"] = ai.generate(prompt, "open_router")
+    elif len(unfiltered_gossip["reddit"]["title"]) > 0:
+        prompt = """In a single short paragraph convey the overall sentiment of this gossip: """ + " ".join(unfiltered_gossip["reddit"]["content"])
+        unfiltered_gossip["reddit"]["gossip_sentiment"] = ai.generate(prompt, "open_router")
+        unfiltered_gossip["x"]["gossip_sentiment"] = "No sufficient talk concerning this topic."
+    elif len(unfiltered_gossip["x"]["title"]) > 0:
+        prompt = """In a single short paragraph convey the overall sentiment of this gossip: """ + " ".join(unfiltered_gossip["x"]["content"])
+        unfiltered_gossip["x"]["gossip_sentiment"] = ai.generate(prompt, "open_router")
+        unfiltered_gossip["reddit"]["gossip_sentiment"] = "No sufficient talk concerning this topic."
+    else:
+        unfiltered_gossip["x"]["gossip_sentiment"] = "No sufficient talk concerning this topic."
+        unfiltered_gossip["reddit"]["gossip_sentiment"] = "No sufficient talk concerning this topic."
 
     return unfiltered_gossip

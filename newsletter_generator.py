@@ -18,8 +18,6 @@ tavily_client = TavilyClient(api_key=os.getenv("Tavily_DEV"))
 ai = AIOrchestrator()
 
 # Initial search
-# with open('five_potential_sources.json', 'r', encoding='utf-8') as file:
-#     response = json.load(file)
 
 response = tavily_client.search("OpenAI OR Anthropic OR Google DeepMind OR Meta AI OR Mistral OR xAI OR AI OR Artificial Intelligence", topic="news", time_range="day", max_results="5")
 
@@ -32,18 +30,17 @@ def viewResponse(title, url, content, score, published_date, formatter=""):
     print(formatter + "---------------------------------------")
 
 # # Vet Article Sources to obtain corroborate and consequential sources for the newsletter.
-temp_email_results = vet_articles(response, tavily_client, ai)
+vetted_articles = vet_articles(response, tavily_client, ai)
 
-vetted_article_titles = [d["title"] for d in temp_email_results]
-vetted_article_urls = [d["url"] for d in temp_email_results]
+vetted_article_titles = [d["title"] for d in vetted_articles]
+vetted_article_urls = [d["url"] for d in vetted_articles]
         
 print("*************************************************************************************************")
 print("VALIDATED RESULTS:")
 signal_sources_txt = []
-# temp_email_results = response["corroborated_consequential_sources"]
-for validResult in temp_email_results:
-    viewResponse(validResult["title"], validResult["url"], validResult["content"], str(validResult["score"]), str(validResult["published_date"]))
-    extract_text = tavily_client.extract(validResult["url"])
+for vetted_article in vetted_articles:
+    viewResponse(vetted_article["title"], vetted_article["url"], vetted_article["content"], str(vetted_article["score"]), str(vetted_article["published_date"]))
+    extract_text = tavily_client.extract(vetted_article["url"])
     signal_sources_txt.append(extract_text)
 
 # Data cleaning
@@ -51,21 +48,24 @@ human_readable_source_txt = get_human_legible_txt(signal_sources_txt)
 
 # Summarize each source
 source_summaries = []
-# source_summaries = response["source_summaries2"]
 for source in human_readable_source_txt:
     prompt = """Summarize the following source in 120–150 words.""" + source
 
     summary_result = ai.generate(prompt, "open_router")
     print(summary_result)
     source_summaries.append(summary_result)
-    print()
+    
+print()
 
 # --------------------------------------------------------------------------------------------------
 # RETRIEVE GOSSIP - X and Reddit
-# REDDIT: https://www.reddit.com/r/opencodeCLI/comments/1w4jwih/anthropic_just_released_claude_fable_51_and
-# X: https://x.com/ArtificialAnlys/status/2094881171066978525
 
 unfiltered_gossip = get_gossip_sentiment(vetted_article_titles, tavily_client, ai)
+
+print("*************************************************************************************************")
+print("VALIDATED RESULTS:")
+for key in unfiltered_gossip:
+    print(key + ": " + unfiltered_gossip[key]["gossip_sentiment"])
 
 # --------------------------------------------------------------------------------------------------
 # GitHub Repo of the Day
@@ -76,9 +76,21 @@ search_date = str(target_date.isoformat())
 github_query = "https://api.github.com/search/repositories?q=created:>"+search_date+"&sort=stars&order=desc&topic=ai"
 top_repo = requests.get(github_query)
 
-print("GitHub Search")
+github_history_file = "github_repo_history.json"
+with open(github_history_file, 'r') as file:
+    github_history = json.load(file)
 
 repo = top_repo.json()["items"][0]
+counter = 1
+while(repo.get("html_url") in github_history["urls"] and counter <= 10):
+    repo = top_repo.json()["items"][counter]
+    counter += 1
+
+github_history["urls"].pop(0)
+github_history["urls"].append(repo.get("html_url"))
+
+with open(github_history_file, "w", encoding="utf-8") as file:
+    json.dump(github_history, file, indent=4)
 
 github_repo_of_the_day = {
     "name": repo.get("name"),
@@ -89,7 +101,10 @@ github_repo_of_the_day = {
     "language": repo.get("language")
 }
 
+print("*************************************************************************************************")
+print("GitHub Repo Results:")
 print(github_repo_of_the_day)
+print()
 
 # --------------------------------------------------------------------------------------------------
 # Newsletter Generation!!!
@@ -98,51 +113,55 @@ print(github_repo_of_the_day)
 
 news_info = ""
 for i in range(0, len(vetted_article_titles)):
-    news_info += "Article Title: " + vetted_article_titles[i] + "\n"
-    news_info += "Article URL: " + vetted_article_urls[i] + "\n"
-    news_info += "Article Info:\n"
-    news_info += source_summaries[i] + "\n\n"
+    news_info += f"""
+    Article Title: {vetted_article_titles[i]}
+    Article URL: {vetted_article_urls[i]}
+    Article Info:
+    {source_summaries[i]}\n\n"""
 
+if news_info == "":
+    news_info = "No vetted or consequential news today. Have a good day!"
 
-ultimate_prompt = "Create a markdown formatted newsletter with a reading time of about four minutes. " 
-ultimate_prompt += "The audience of this newsletter are smart, curious, non-technical business owners. " 
-ultimate_prompt += "The newsletter should contain the following sections with relevant information:\n\n " 
+ultimate_prompt = f"""
+Create a markdown formatted newsletter with a reading time of about four minutes.
+The audience of this newsletter are smart, curious, non-technical business owners.
+The newsletter should contain the following sections with relevant information:
 
-ultimate_prompt += "The Big Story\n"
-ultimate_prompt += "The one thing that matters most today, and why.\n\n"
+The Big Story
+The one thing that matters most today, and why.
 
-ultimate_prompt += "Frontier Watch\n" 
-ultimate_prompt += "A sentence on how what each source is about and how it relates to at least two of the following: "
-ultimate_prompt += "time saved, costs reduced, or revenue unlocked. Be specific when talking about what parts specifically "  
-ultimate_prompt += "relate to the time saved, costs reduced, or revenue unlocked. Include hyperlinks to the relevant article "  
-ultimate_prompt += "the content was sourced from. Include any other relevant information from these sources you deem worth "
-ultimate_prompt += "knowing.\n"
-ultimate_prompt += "Sources:\n"
-ultimate_prompt += news_info
+Frontier Watch
+A sentence on how what each source is about and how it relates to at least two of the following:
+time saved, costs reduced, or revenue unlocked. Be specific when talking about what parts specifically 
+relate to the time saved, costs reduced, or revenue unlocked. Include hyperlinks to the relevant article
+the content was sourced from. Include any other relevant information from these sources you deem worth
+knowing.
+Sources - If there are no sources provided, state so:
+{news_info}
 
-ultimate_prompt += "The Street Says\n"
-ultimate_prompt += "Sentiment, gossip, and hot takes from X and Reddit.\n"
-ultimate_prompt += "X:\n"
-ultimate_prompt += unfiltered_gossip["x"]["gossip_sentiment"] + "\n"
-ultimate_prompt += "Reddit:\n"
-ultimate_prompt += unfiltered_gossip["reddit"]["gossip_sentiment"] + "\n\n"
+The Street Says
+Sentiment, gossip, and hot takes from X and Reddit.
+X - If there is no gossip provided, state so:
+{unfiltered_gossip["x"]["gossip_sentiment"]}
+Reddit - If there is no gossip provided, state so:
+{unfiltered_gossip["reddit"]["gossip_sentiment"]}
 
-ultimate_prompt += "Repo of the Day\n"
-ultimate_prompt += "Information on one GitHub project worth knowing about. Use the following information provided for the "
-ultimate_prompt += "GitHub repo of the day.\n"
-ultimate_prompt += str(github_repo_of_the_day) + "\n\n"
+Repo of the Day
+Information on one GitHub project worth knowing about. Use the following information provided for the
+GitHub repo of the day.
+{str(github_repo_of_the_day)}
 
-ultimate_prompt += "Two Steps Ahead\n"
-ultimate_prompt += "A short forward-looking take: what today's news hints at for tomorrow."
-
-print("##############################################################################################")
-print(ultimate_prompt)
-print("##############################################################################################")
-print()
+Two Steps Ahead
+A short forward-looking take: what today's news hints at for tomorrow."""
 
 newsletter_message = ai.generate(ultimate_prompt, "nvidia", "advanced")
 
 message = markdown.markdown(newsletter_message)
+
+archival_file_name = str(date.today().isoformat()) + "_AI_Newsletter.html"
+file_location = os.path.join("newsletter_archive", archival_file_name)
+with open(file_location, "w", encoding="utf-8") as file:
+    file.write(message)
 
 # --------------------------------------------------------------------------------------------------
 # SEND EMAIL
