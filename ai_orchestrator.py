@@ -170,6 +170,10 @@ class AIOrchestrator:
 
     def generate(self, prompt, provider=None, model="default", structured=False):
         raw_results = self._retry(prompt, provider, model, structured)
+        print("Generated Output")
+        print(raw_results)
+        print("-------------------------------")
+        print()
         if not structured:
             return raw_results
             
