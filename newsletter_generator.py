@@ -12,9 +12,15 @@ from data_cleaner import get_human_legible_txt
 from vibe_checker import get_gossip_sentiment
 from ai_orchestrator import AIOrchestrator
 from search_orchestrator import SearchOrchestrator
+from supabase_storage import SupabaseStorage
+
+# Load Secrets
+from dotenv import load_dotenv
+load_dotenv()
 
 search = SearchOrchestrator()
 ai = AIOrchestrator()
+storage = SupabaseStorage()
 
 # Initial search
 
@@ -75,9 +81,11 @@ search_date = str(target_date.isoformat())
 github_query = "https://api.github.com/search/repositories?q=created:>"+search_date+"&sort=stars&order=desc&topic=ai"
 top_repo = requests.get(github_query)
 
-github_history_file = "github_repo_history.json"
-with open(github_history_file, 'r') as file:
-    github_history = json.load(file)
+try:
+    github_history = storage.download_json("newsletter-archive", "repo-history/github_repo_history.json")
+except Exception as e:
+    print("Supabase json download failed:", e)
+    pass
 
 repo = top_repo.json()["items"][0]
 counter = 1
@@ -88,8 +96,11 @@ while(repo.get("html_url") in github_history["urls"] and counter <= 10):
 github_history["urls"].pop(0)
 github_history["urls"].append(repo.get("html_url"))
 
-with open(github_history_file, "w", encoding="utf-8") as file:
-    json.dump(github_history, file, indent=4)
+try:
+    storage.upload_json("newsletter-archive", "repo-history/github_repo_history.json", github_history)
+except Exception as e:
+    print("Supabase json upload failed:", e)
+    pass
 
 github_repo_of_the_day = {
     "name": repo.get("name"),
@@ -157,10 +168,13 @@ newsletter_message = ai.generate(ultimate_prompt, "nvidia", "advanced")
 
 message = markdown.markdown(newsletter_message)
 
-archival_file_name = str(date.today().isoformat()) + "_AI_Newsletter.html"
-file_location = os.path.join("newsletter_archive", archival_file_name)
-with open(file_location, "w", encoding="utf-8") as file:
-    file.write(message)
+archival_file_name = str(date.today().isoformat()) + ".html"
+
+try:
+    storage.upload_html("newsletter-archive", archival_file_name, message)
+except Exception as e:
+    print("Supabase html upload failed:", e)
+    pass
 
 # --------------------------------------------------------------------------------------------------
 # SEND EMAIL
