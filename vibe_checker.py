@@ -1,4 +1,4 @@
-def get_gossip_sentiment(vetted_article_titles, tavily_client, ai):
+def get_gossip_sentiment(vetted_article_titles, search, ai):
     unfiltered_gossip = {
         "reddit": {
             "title": [],
@@ -15,8 +15,8 @@ def get_gossip_sentiment(vetted_article_titles, tavily_client, ai):
     }
 
     for article_title in vetted_article_titles:
-        reddit_gossip = tavily_client.search("site:reddit.com Claude Fable 5.1 (max with fallback)", max_results="1")
-        x_gossip = tavily_client.search("site:x.com Claude Fable 5.1 (max with fallback)", max_results="1")
+        reddit_gossip = search.search("site:reddit.com Claude Fable 5.1 (max with fallback)", max_results=1)
+        x_gossip = search.search("site:x.com Claude Fable 5.1 (max with fallback)", max_results=1)
 
         unfiltered_gossip["reddit"]["title"].append(reddit_gossip["results"][0]["title"])
         unfiltered_gossip["reddit"]["content"].append(reddit_gossip["results"][0]["content"])

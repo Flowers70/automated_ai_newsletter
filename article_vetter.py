@@ -1,6 +1,6 @@
 # import json
 
-def vet_articles(response, tavily_client, ai):
+def vet_articles(response, search, ai):
     # Determine if it is just a SEO junk like "Top Multimodal AI Companies in 2026 Google OpenAI"
     # For this to perform well as expected in the coding challenge debrief it will need to implement
     # a LLM.
@@ -17,6 +17,10 @@ def vet_articles(response, tavily_client, ai):
             Title: """+str(article_titles)
 
     quality_results = ai.generate(prompt, "open_router", "classification", True)
+    print("Quality Results:", quality_results)
+
+    for i in range(0, (len(article_titles) - len(quality_results))):
+        quality_results.append("noise")
 
     # Only return a max of three results to ensure the newsletter can comfortably perform well
     # in talking about the signal while staying within the 5 minute reading mark.
@@ -27,7 +31,7 @@ def vet_articles(response, tavily_client, ai):
             first_sentence = response["results"][pageI]["content"].split(".")[0]
             search_query = response["results"][pageI]["title"] + " " + first_sentence
 
-            corroborate_search_results = tavily_client.search(search_query, topic="news")
+            corroborate_search_results = search.search(search_query, topic="news")
 
             corroborate_evidence = 0
             for subPage in corroborate_search_results["results"]:

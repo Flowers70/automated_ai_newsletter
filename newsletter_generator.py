@@ -1,8 +1,6 @@
 import os
 import json
-from tavily import TavilyClient
 import markdown
-# from openrouter import OpenRouter
 import requests
 import time
 from datetime import date, timedelta
@@ -13,13 +11,14 @@ from article_vetter import vet_articles
 from data_cleaner import get_human_legible_txt
 from vibe_checker import get_gossip_sentiment
 from ai_orchestrator import AIOrchestrator
+from search_orchestrator import SearchOrchestrator
 
-tavily_client = TavilyClient(api_key=os.getenv("Tavily_DEV"))
+search = SearchOrchestrator()
 ai = AIOrchestrator()
 
 # Initial search
 
-response = tavily_client.search("OpenAI OR Anthropic OR Google DeepMind OR Meta AI OR Mistral OR xAI OR AI OR Artificial Intelligence", topic="news", time_range="day", max_results="5")
+response = search.search("OpenAI OR Anthropic OR Google DeepMind OR Meta AI OR Mistral OR xAI OR AI OR Artificial Intelligence", topic="news", time_range="day", max_results="5")
 
 def viewResponse(title, url, content, score, published_date, formatter=""):
     print(formatter + "Title\n" + formatter + title + "\n")
@@ -30,7 +29,7 @@ def viewResponse(title, url, content, score, published_date, formatter=""):
     print(formatter + "---------------------------------------")
 
 # # Vet Article Sources to obtain corroborate and consequential sources for the newsletter.
-vetted_articles = vet_articles(response, tavily_client, ai)
+vetted_articles = vet_articles(response, search, ai)
 
 vetted_article_titles = [d["title"] for d in vetted_articles]
 vetted_article_urls = [d["url"] for d in vetted_articles]
@@ -40,7 +39,7 @@ print("VALIDATED RESULTS:")
 signal_sources_txt = []
 for vetted_article in vetted_articles:
     viewResponse(vetted_article["title"], vetted_article["url"], vetted_article["content"], str(vetted_article["score"]), str(vetted_article["published_date"]))
-    extract_text = tavily_client.extract(vetted_article["url"])
+    extract_text = search.extract(vetted_article["url"])
     signal_sources_txt.append(extract_text)
 
 # Data cleaning
@@ -60,7 +59,7 @@ print()
 # --------------------------------------------------------------------------------------------------
 # RETRIEVE GOSSIP - X and Reddit
 
-unfiltered_gossip = get_gossip_sentiment(vetted_article_titles, tavily_client, ai)
+unfiltered_gossip = get_gossip_sentiment(vetted_article_titles, search, ai)
 
 print("*************************************************************************************************")
 print("VALIDATED RESULTS:")
