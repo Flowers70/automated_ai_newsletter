@@ -46,24 +46,90 @@ To add the secrets to your GitHub repository follow these [instructions](https:/
 ## Architecture
 This project follows a linear pipeline architecture, designed to run end-to-end every morning without human intervention. Each stage collects, transforms, and enriches data:
 
-1. AI News | Intake
-Retrieves a list of search results concerning AI from the past day. It specifically obtains the following:
+### 1. AI News | Intake
+
+Retrieves daily AI related articles using a search provider.\
+Each result includes:
 - Title
 - url
 - Content (summary of page contents)
 - Relevance
 - Publication Date
+This stage provides the raw materials for the newsletter's "Big Story" and "Frontier Watch" sections.
 
-2. AI News | Transform
-Classifies articles based on the title into "news", "analysis", or "noise". The ones classified as "noise" are discarded and considered inconsequential.
-3. Gossip | Intake
+Output: A list of AI-related articles published in the past day.
 
-4. Gossip | Transform
+### 2. AI News | Transform
 
-5. GitHub | Intake
+Processes and filters the raw articles:
+- Classifies each article as news, analysis, or noise
+- Discards noise
+- Discards articles with insufficient relevant articles
+- Normalizes each article, cleaning the scraped data using NLP (Natural Language Processing)
+- Condenses each article into a summary for the final newsletter synthesis
+- Extracts key information (e.g. title) for downstream synthesis
+This ensures only corroborated and consequential articles enter the final newsletter.
 
-6. Newsletter | Transform
+Output: A vetted list of meaningful AI articles.
 
-7. Email | Output
+### 3. Gossip | Intake
+
+Retrieves gossip from X and Reddit related to the vetted articles using a search provider.\
+Each result includes:
+- Title
+- url
+- Content (summary of page contents)
+This stage provides the raw materials for the newsletter's "The Street Says" section.
+
+Output: A dictionary of lists containing the specific pages of gossip for each social media platform.
+
+### 4. Gossip | Transform
+
+Processes the raw gossip capturing:
+- Gossip
+- Sentiment
+- Drama
+This provides a short summary concerning the gossip's sentiment for the final newsletter.
+
+Output: Short summaries containing the overall sentiment of gossip for each social media platform.
+
+### 5. GitHub | Intake
+
+Fetches trending AI-related repositories from GitHub's public endpoint.\
+This includes:
+- Name
+- url
+- Description
+- Homepage
+- Stars
+- Programming language
+This stage obtains the raw data needed structured in a dictionary for the "Repo of the Day" section.
+
+Output: A dictionary containing metadata on a meaningful AI-related GitHub repository.
+
+### 6. Newsletter | Transform
+
+Combines all the processed inputs into a single editorial markdown formatted newsletter.
+A structured prompt generates the newsletter's five sections:
+- The Big Story
+  - The overarching story that emerges from the inputs
+- Frontier Watch
+  - The vetted news articles
+- The Street Says
+  - The gossip concerning the news on X and Reddit
+- Repo of the Day
+  - An AI-related GitHub repository trending amongst developers
+- Two Steps Ahead
+  - An educated guess on what this news implies for the future
+This layer ensures each section answers *why* it matters, provides forward-looking insight, and is written with non-technical readers in mind. 
+
+Output: A markdown formatted newsletter.
+
+### 7. Email | Output
+
+Transforms the markdown into html and delivers it through email.\
+This is automatically triggered by the automated workflow.
+
+Output: A daily edition delivered by email.
 
 ## Design Decisions

@@ -57,7 +57,6 @@ for source in human_readable_source_txt:
     prompt = """Summarize the following source in 120–150 words.""" + source
 
     summary_result = ai.generate(prompt, "open_router")
-    print(summary_result)
     source_summaries.append(summary_result)
     
 print()
