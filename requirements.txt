@@ -6,4 +6,5 @@ tavily-python==0.8.0
 click==8.1.7
 openrouter>=1.1.120,<1.2.0
 supabase==2.31.0
+requests==2.34.2
 # For local use: python-dotenv==1.2.3
