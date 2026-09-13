@@ -9,8 +9,6 @@ def send_email(message):
 
     recipients = [email.strip() for email in EMAIL_RECIPIENTS.split(",") if email.strip()]
 
-    print("RECIPIENTS:", recipients)
-
     msg = EmailMessage()
     msg["Subject"] = "AI Newsletter"
     msg["From"] = EMAIL_ADDRESS
