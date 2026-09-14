@@ -66,7 +66,6 @@ class OpenRouterAdapter:
                     }
                 ],
                 stream=False,
-                timeout=timeout
             )
         else:
             response = self.client.chat.send(
@@ -95,7 +94,6 @@ class OpenRouterAdapter:
                     }
                 },
                 stream=False,
-                timeout=timeout
             )
 
         return response.choices[0].message.content
