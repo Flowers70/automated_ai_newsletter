@@ -174,7 +174,7 @@ A short forward-looking take: what today's news hints at for tomorrow."""
 
 newsletter_message = ai.generate(ultimate_prompt, "nvidia", "advanced", timeout=300)
 
-message = markdown.markdown(newsletter_message)
+message = "<!DOCTYPE html><head><title>AI Newsletter</title></head><html>"+markdown.markdown(newsletter_message)+"</html>"
 
 archival_file_name = "editions/" + str(date.today().isoformat()) + ".html"
 

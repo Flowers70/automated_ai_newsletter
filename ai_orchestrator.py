@@ -153,7 +153,7 @@ class AIOrchestrator:
         try:
             return self.providers[provider].run(prompt, model, structured, timeout)
         except Exception as e:
-            print("Initial requested provider unavailable:", provider)
+            print("Initial requested provider unavailable:", provider, e)
             pass
 
         other_models = [m for m in self.model_order if m != model]
